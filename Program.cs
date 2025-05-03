@@ -25,28 +25,32 @@ var host = Host.CreateDefaultBuilder(args)
     .Build();
 
 
-
 using var scope = host.Services.CreateScope();
 var repo = scope.ServiceProvider.GetRequiredService<ITaskRepository>();
 
 var task = ScheduleTaskBuilder.Create("Recurring EQ")
   .WithJob(new TesteText() {
     Name = "Teste",
-    Description = $"solicitação de execução as {DateTime.UtcNow:s}",
+    Description = $"solicitação de execução as {DateTimeOffset.UtcNow:s}",
     Group = "Pertence ao grupo de dependencia. Só executa em caso de erro.",
     TesteClass = new TesteClass() {
       Testes = [
         "Teste1", "Teste2", "Teste3"
-        ]
+      ]
     }
+  }).ConfigureTriggers(triggerBuilder => {
+    triggerBuilder.CreateOnceTrigger().SetExecutionTime(DateTimeOffset.UtcNow.AddMinutes(1.4));
+    triggerBuilder.CreateCronTrigger().SetCronExpression("0 0/1 * * * ?");
+    triggerBuilder.CreateWeeklyTrigger()
+      .SetTimeOfDay()
+      .SetDaysOfWeek(DayOfWeek.Monday, DayOfWeek.Friday);
   })
-  .AddTrigger<OnceTrigger>(a => a.StartsAt = DateTime.UtcNow.AddMinutes(1.4))
   .DependsOn(ScheduleTaskBuilder.Create("Master Execution")
     .WithJob(new JobExec() { Descricao = "executa um job"})
-    .AddTrigger<OnceTrigger>(a => a.StartsAt = DateTime.UtcNow.AddMinutes(1))
+    .ConfigureTriggers(triggerBuilder => triggerBuilder.CreateOnceTrigger().SetExecutionTime(DateTimeOffset.UtcNow.AddMinutes(1)))
     .NotDepends()
     .Build()
-   )
+  )
   .WithStatus(ExecutionStatus.Failed)
   .SetAutoDelete(false)
   .SetIsActive(true)
