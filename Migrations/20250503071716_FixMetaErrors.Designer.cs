@@ -4,6 +4,7 @@ using GenTaskScheduler.SqlServer.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenTaskScheduler.SqlServer.Migrations
 {
     [DbContext(typeof(GenSqlServerContext))]
-    partial class GenSqlServerContextModelSnapshot : ModelSnapshot
+    [Migration("20250503071716_FixMetaErrors")]
+    partial class FixMetaErrors
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -160,9 +163,6 @@ namespace GenTaskScheduler.SqlServer.Migrations
                     b.Property<Guid>("TaskId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<TimeOnly>("TimeOfDay")
-                        .HasColumnType("time");
-
                     b.Property<string>("TriggerDescription")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -210,6 +210,9 @@ namespace GenTaskScheduler.SqlServer.Migrations
                 {
                     b.HasBaseType("GenTaskScheduler.Core.Models.Triggers.BaseTrigger");
 
+                    b.Property<TimeOnly>("TimeOfDay")
+                        .HasColumnType("time");
+
                     b.HasDiscriminator().HasValue("Daily");
                 });
 
@@ -239,6 +242,15 @@ namespace GenTaskScheduler.SqlServer.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<TimeOnly>("TimeOfDay")
+                        .HasColumnType("time");
+
+                    b.ToTable("Triggers", t =>
+                        {
+                            t.Property("TimeOfDay")
+                                .HasColumnName("MonthlyTrigger_TimeOfDay");
+                        });
+
                     b.HasDiscriminator().HasValue("Monthly");
                 });
 
@@ -260,6 +272,15 @@ namespace GenTaskScheduler.SqlServer.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<TimeOnly>("TimeOfDay")
+                        .HasColumnType("time");
+
+                    b.ToTable("Triggers", t =>
+                        {
+                            t.Property("TimeOfDay")
+                                .HasColumnName("WeeklyTrigger_TimeOfDay");
+                        });
 
                     b.HasDiscriminator().HasValue("Weekly");
                 });
