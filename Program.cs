@@ -24,7 +24,7 @@ var host = Host.CreateDefaultBuilder(args)
 using var scope = host.Services.CreateScope();
 var repo = scope.ServiceProvider.GetRequiredService<ITaskRepository>();
 
-var task = ScheduleTaskBuilder.Create("Recurring EQ")
+var task = GenScheduleTaskBuilder.Create("TesteRecorrente")
   .WithJob(new TesteText() {
     Name = "Teste",
     Description = $"solicitação de execução as {DateTimeOffset.UtcNow:s}",
@@ -37,7 +37,13 @@ var task = ScheduleTaskBuilder.Create("Recurring EQ")
   }).ConfigureTriggers(triggerBuilder => {
     triggerBuilder.CreateOnceTrigger()
       .SetExecutionDateTime(DateTimeOffset.UtcNow.AddMinutes(2))
-      .SetDescription("teste desc")
+      .SetDescription("Once Trigger para executar em 2 minutos")
+      .SetAutoDelete(true)
+      .Build();
+
+    triggerBuilder.CreateIntervalTrigger(DateTimeOffset.UtcNow.AddMinutes(3))
+      .SetRepeatIntervalMinutes(1)
+      .SetDescription("Recorrente de intervalo que será deletado após executar. Execução em 3 minutos")
       .SetAutoDelete(true)
       .Build();
 
@@ -53,17 +59,18 @@ var task = ScheduleTaskBuilder.Create("Recurring EQ")
     //triggerBuilder.CreateIntervalTrigger(DateTimeOffset.UtcNow.AddMinutes(15))
     //.SetRepeatIntervalMinutes(1)
     //.Build();
-  })
-  .DependsOn(ScheduleTaskBuilder.Create("Master Execution")
-    .WithJob(new JobExec() { Descricao = "executa um job" })
-    .ConfigureTriggers(triggerBuilder => triggerBuilder.CreateOnceTrigger()
-      .SetExecutionDateTime(DateTimeOffset.UtcNow.AddMinutes(1))
-      .Build()
-    )
-    .NotDepends()
-    .Build()
-  )
-  .WithStatus(ExecutionStatus.Failed)
+  }).NotDepends()
+  //.DependsOn(ScheduleTaskBuilder.Create("Master Execution")
+  //  .WithJob(new JobExec() { Descricao = "executa um job" })
+  //  .ConfigureTriggers(triggerBuilder => triggerBuilder.CreateOnceTrigger()
+  //    .SetExecutionDateTime(DateTimeOffset.UtcNow.AddMinutes(1))
+  //    .SetDescription("Main task para validar job dependente")
+  //    .Build()
+  //  )
+  //  .NotDepends()
+  //  .Build()
+  //)
+  //.WithStatus(ExecutionStatus.Failed)
   .SetAutoDelete(false)
   .SetIsActive(true)
   .Build();
