@@ -1,5 +1,4 @@
 ﻿using GenTaskScheduler.Core.Abstractions.Repository;
-using GenTaskScheduler.Core.Enums;
 using GenTaskScheduler.Core.Infra.Builder.TaskBuilder;
 using GenTaskScheduler.SqlServer;
 using Microsoft.EntityFrameworkCore;
@@ -24,32 +23,26 @@ var host = Host.CreateDefaultBuilder(args)
 using var scope = host.Services.CreateScope();
 var repo = scope.ServiceProvider.GetRequiredService<ITaskRepository>();
 
-var task = GenScheduleTaskBuilder.Create("TesteRecorrente")
-  .WithJob(new TesteText() {
-    Name = "Teste",
-    Description = $"solicitação de execução as {DateTimeOffset.UtcNow:s}",
-    Group = "Pertence ao grupo de dependencia. Só executa em caso de erro.",
-    TesteClass = new TesteClass() {
-      Testes = [
-        "Teste1", "Teste2", "Teste3"
-      ]
-    }
+var task = GenScheduleTaskBuilder.Create("TesteRecorrente Cron")
+  .WithJob(new JobExec() {
+    Descricao = "executa um job com cron"
   }).ConfigureTriggers(triggerBuilder => {
-    triggerBuilder.CreateOnceTrigger()
-      .SetExecutionDateTime(DateTimeOffset.UtcNow.AddMinutes(2))
-      .SetDescription("Once Trigger para executar em 2 minutos")
-      .SetAutoDelete(true)
-      .Build();
-
-    triggerBuilder.CreateIntervalTrigger(DateTimeOffset.UtcNow.AddMinutes(3))
-      .SetRepeatIntervalMinutes(1)
-      .SetDescription("Recorrente de intervalo que será deletado após executar. Execução em 3 minutos")
-      .SetAutoDelete(true)
-      .Build();
-
-    //triggerBuilder.CreateCronTrigger(DateTimeOffset.UtcNow.AddMinutes(15))
-    //  .SetCronExpression("*/1 * * * *")
+    //triggerBuilder.CreateOnceTrigger()
+    //  .SetExecutionDateTime(DateTimeOffset.UtcNow.AddSeconds(60))
+    //  .SetDescription("Once Trigger para executar em 60 segundos")
+    //  .SetAutoDelete(true)
     //  .Build();
+
+    //triggerBuilder.CreateIntervalTrigger(DateTimeOffset.UtcNow.AddMinutes(1))
+    //  .SetRepeatIntervalMinutes(1)
+    //  .SetExecutionLimit(6)
+    //  .SetDescription("Recorrente de intervalo que será deletado após executar. Execução em 1 minutos")
+    //  .SetAutoDelete(true)
+    //  .Build();
+
+    triggerBuilder.CreateCronTrigger(DateTimeOffset.UtcNow.AddMinutes(2))
+      .SetCronExpression("*/1 8-18 * * 1-5")
+      .Build();
 
     //triggerBuilder.CreateWeeklyTrigger(DateTimeOffset.UtcNow.AddMinutes(15))
     //  .SetDaysOfWeek(DayOfWeek.Monday, DayOfWeek.Friday)
@@ -70,7 +63,7 @@ var task = GenScheduleTaskBuilder.Create("TesteRecorrente")
   //  .NotDepends()
   //  .Build()
   //)
-  //.WithStatus(ExecutionStatus.Failed)
+  //.WithStatus(GenTaskHistoryStatus.Success, GenTaskHistoryStatus.Canceled)
   .SetAutoDelete(false)
   .SetIsActive(true)
   .Build();
