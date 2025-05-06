@@ -23,7 +23,7 @@ var host = Host.CreateDefaultBuilder(args)
 using var scope = host.Services.CreateScope();
 var repo = scope.ServiceProvider.GetRequiredService<ITaskRepository>();
 
-var task = GenScheduleTaskBuilder.Create("TesteRecorrente Cron")
+var task = GenScheduleTaskBuilder.Create("TesteRecorrente Weekly")
   .WithJob(new JobExec() {
     Descricao = "executa um job com cron"
   }).ConfigureTriggers(triggerBuilder => {
@@ -40,14 +40,14 @@ var task = GenScheduleTaskBuilder.Create("TesteRecorrente Cron")
     //  .SetAutoDelete(true)
     //  .Build();
 
-    triggerBuilder.CreateCronTrigger(DateTimeOffset.UtcNow.AddMinutes(2))
-      .SetCronExpression("*/1 8-18 * * 1-5")
-      .Build();
-
-    //triggerBuilder.CreateWeeklyTrigger(DateTimeOffset.UtcNow.AddMinutes(15))
-    //  .SetDaysOfWeek(DayOfWeek.Monday, DayOfWeek.Friday)
-    //  .SetTimeOfDay(default)
+    //triggerBuilder.CreateCronTrigger(DateTimeOffset.UtcNow.AddMinutes(2))
+    //  .SetCronExpression("*/1 8-18 * * 1-5")
     //  .Build();
+
+    triggerBuilder.CreateWeeklyTrigger(DateTimeOffset.UtcNow.AddMinutes(1))
+      .SetDaysOfWeek(DayOfWeek.Tuesday, DayOfWeek.Wednesday)
+      .SetTimeOfDay(new TimeOnly(00, 44))
+      .Build();
 
     //triggerBuilder.CreateIntervalTrigger(DateTimeOffset.UtcNow.AddMinutes(15))
     //.SetRepeatIntervalMinutes(1)
@@ -66,6 +66,7 @@ var task = GenScheduleTaskBuilder.Create("TesteRecorrente Cron")
   //.WithStatus(GenTaskHistoryStatus.Success, GenTaskHistoryStatus.Canceled)
   .SetAutoDelete(false)
   .SetIsActive(true)
+  .SetTimeout(TimeSpan.FromSeconds(20))
   .Build();
 
 await repo.AddAsync(task);
