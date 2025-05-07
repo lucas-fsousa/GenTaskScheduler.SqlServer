@@ -1,5 +1,7 @@
 ﻿using GenTaskScheduler.Core.Abstractions.Repository;
+using GenTaskScheduler.Core.Enums;
 using GenTaskScheduler.Core.Infra.Builder.TaskBuilder;
+using GenTaskScheduler.Core.Models.Common;
 using GenTaskScheduler.SqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -23,9 +25,10 @@ var host = Host.CreateDefaultBuilder(args)
 using var scope = host.Services.CreateScope();
 var repo = scope.ServiceProvider.GetRequiredService<ITaskRepository>();
 
-var task = GenScheduleTaskBuilder.Create("TesteRecorrente Weekly")
+
+var task = GenScheduleTaskBuilder.Create("TesteRecorrente Monthly")
   .WithJob(new JobExec() {
-    Descricao = "executa um job com cron"
+    Descricao = "executa um job"
   }).ConfigureTriggers(triggerBuilder => {
     //triggerBuilder.CreateOnceTrigger()
     //  .SetExecutionDateTime(DateTimeOffset.UtcNow.AddSeconds(60))
@@ -44,14 +47,16 @@ var task = GenScheduleTaskBuilder.Create("TesteRecorrente Weekly")
     //  .SetCronExpression("*/1 8-18 * * 1-5")
     //  .Build();
 
-    triggerBuilder.CreateWeeklyTrigger(DateTimeOffset.UtcNow.AddMinutes(1))
-      .SetDaysOfWeek(DayOfWeek.Tuesday, DayOfWeek.Wednesday)
-      .SetTimeOfDay(new TimeOnly(00, 44))
-      .Build();
+    //triggerBuilder.CreateWeeklyTrigger(DateTimeOffset.UtcNow.AddMinutes(1))
+    //  .SetDaysOfWeek(DayOfWeek.Tuesday, DayOfWeek.Wednesday)
+    //  .SetTimeOfDay(new TimeOnly(00, 44))
+    //  .Build();
 
-    //triggerBuilder.CreateIntervalTrigger(DateTimeOffset.UtcNow.AddMinutes(15))
-    //.SetRepeatIntervalMinutes(1)
-    //.Build();
+    triggerBuilder.CreateMonthlyTrigger(DateTimeOffset.UtcNow.AddMinutes(1))
+    .SetDaysOfMonth(new IntRange(1, 5), new IntRange(6, 26))
+    .SetMonthsOfYear(MonthOfYear.January, MonthOfYear.February, MonthOfYear.March, MonthOfYear.May)
+    .SetTimeOfDay(new TimeOnly(22, 39))
+    .Build();
   }).NotDepends()
   //.DependsOn(ScheduleTaskBuilder.Create("Master Execution")
   //  .WithJob(new JobExec() { Descricao = "executa um job" })
