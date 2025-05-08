@@ -26,12 +26,12 @@ using var scope = host.Services.CreateScope();
 var repo = scope.ServiceProvider.GetRequiredService<ITaskRepository>();
 
 
-var task = GenScheduleTaskBuilder.Create("TesteRecorrente Monthly")
+var task = GenScheduleTaskBuilder.Create($"TesteRecorrente Calendar")
   .WithJob(new JobExec() {
     Descricao = "executa um job"
   }).ConfigureTriggers(triggerBuilder => {
     //triggerBuilder.CreateOnceTrigger()
-    //  .SetExecutionDateTime(DateTimeOffset.UtcNow.AddSeconds(60))
+    //  .SetExecutionDateTime(DateTimeOffset.UtcNow.AddMinutes(1))
     //  .SetDescription("Once Trigger para executar em 60 segundos")
     //  .SetAutoDelete(true)
     //  .Build();
@@ -52,10 +52,18 @@ var task = GenScheduleTaskBuilder.Create("TesteRecorrente Monthly")
     //  .SetTimeOfDay(new TimeOnly(00, 44))
     //  .Build();
 
-    triggerBuilder.CreateMonthlyTrigger(DateTimeOffset.UtcNow.AddMinutes(1))
-    .SetDaysOfMonth(new IntRange(1, 5), new IntRange(6, 26))
-    .SetMonthsOfYear(MonthOfYear.January, MonthOfYear.February, MonthOfYear.March, MonthOfYear.May)
-    .SetTimeOfDay(new TimeOnly(22, 39))
+    //triggerBuilder.CreateMonthlyTrigger(DateTimeOffset.UtcNow.AddMinutes(1))
+    //.SetDaysOfMonth(new IntRange(1, 5), new IntRange(6, 26))
+    //.SetMonthsOfYear(MonthOfYear.January, MonthOfYear.February, MonthOfYear.March, MonthOfYear.May)
+    //.SetTimeOfDay(new TimeOnly(22, 39))
+    //.Build();
+
+    triggerBuilder.CreateCalendarTrigger(DateTimeOffset.UtcNow.AddMinutes(1))
+    .AddCalendarEntries([
+      new () { ScheduledDateTime = DateTimeOffset.UtcNow.AddMinutes(2) }
+      //new () { ScheduledDateTime = DateTimeOffset.UtcNow.AddMinutes(6) },
+      //new () { ScheduledDateTime = DateTimeOffset.UtcNow.AddDays(1) },
+    ])
     .Build();
   }).NotDepends()
   //.DependsOn(ScheduleTaskBuilder.Create("Master Execution")

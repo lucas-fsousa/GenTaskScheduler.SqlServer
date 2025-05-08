@@ -4,6 +4,7 @@ using GenTaskScheduler.SqlServer.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenTaskScheduler.SqlServer.Migrations
 {
     [DbContext(typeof(GenSqlServerContext))]
-    partial class GenSqlServerContextModelSnapshot : ModelSnapshot
+    [Migration("20250507212841_IncLastHistory")]
+    partial class IncLastHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -122,6 +125,9 @@ namespace GenTaskScheduler.SqlServer.Migrations
 
                     b.Property<string>("ErrorMessage")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("ResultBlob")
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<DateTimeOffset>("StartedAt")
                         .HasColumnType("datetimeoffset");
