@@ -4,6 +4,7 @@ using GenTaskScheduler.SqlServer.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GenTaskScheduler.SqlServer.Migrations
 {
     [DbContext(typeof(GenSqlServerContext))]
-    partial class GenSqlServerContextModelSnapshot : ModelSnapshot
+    [Migration("20250503071716_FixMetaErrors")]
+    partial class FixMetaErrors
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,9 +35,6 @@ namespace GenTaskScheduler.SqlServer.Migrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("Executed")
-                        .HasColumnType("bit");
 
                     b.Property<DateTimeOffset>("ScheduledDateTime")
                         .HasColumnType("datetimeoffset");
@@ -64,37 +64,22 @@ namespace GenTaskScheduler.SqlServer.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("DependsOnStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("DependsOnStatus")
+                        .HasColumnType("int");
 
                     b.Property<Guid?>("DependsOnTaskId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ExecutionStatus")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
+                    b.Property<int>("ExecutionStatus")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset>("LastExecution")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid?>("LastExecutionHistoryId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<TimeSpan>("MaxExecutionTime")
-                        .HasColumnType("time");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTimeOffset>("NextExecution")
-                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -102,12 +87,6 @@ namespace GenTaskScheduler.SqlServer.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DependsOnTaskId");
-
-                    b.HasIndex("ExecutionStatus");
-
-                    b.HasIndex("IsActive");
-
-                    b.HasIndex("LastExecutionHistoryId");
 
                     b.ToTable("ScheduledTasks");
                 });
@@ -121,15 +100,17 @@ namespace GenTaskScheduler.SqlServer.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("ErrorMessage")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<byte[]>("ResultBlob")
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<DateTimeOffset>("StartedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("TaskId")
                         .HasColumnType("uniqueidentifier");
@@ -167,11 +148,6 @@ namespace GenTaskScheduler.SqlServer.Migrations
                     b.Property<DateTimeOffset?>("LastExecution")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("LastTriggeredStatus")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<int?>("MaxExecutions")
                         .HasColumnType("int");
 
@@ -186,9 +162,6 @@ namespace GenTaskScheduler.SqlServer.Migrations
 
                     b.Property<Guid>("TaskId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<TimeOnly>("TimeOfDay")
-                        .HasColumnType("time");
 
                     b.Property<string>("TriggerDescription")
                         .IsRequired()
@@ -205,11 +178,7 @@ namespace GenTaskScheduler.SqlServer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("NextExecution");
-
                     b.HasIndex("TaskId");
-
-                    b.HasIndex("NextExecution", "LastTriggeredStatus");
 
                     b.ToTable("Triggers", (string)null);
 
@@ -241,12 +210,21 @@ namespace GenTaskScheduler.SqlServer.Migrations
                 {
                     b.HasBaseType("GenTaskScheduler.Core.Models.Triggers.BaseTrigger");
 
+                    b.Property<TimeOnly>("TimeOfDay")
+                        .HasColumnType("time");
+
                     b.HasDiscriminator().HasValue("Daily");
                 });
 
             modelBuilder.Entity("GenTaskScheduler.Core.Models.Triggers.IntervalTrigger", b =>
                 {
                     b.HasBaseType("GenTaskScheduler.Core.Models.Triggers.BaseTrigger");
+
+                    b.Property<DateTimeOffset>("InitialExecutionTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("RepeatIntervalMinutes")
+                        .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("Interval");
                 });
@@ -264,12 +242,24 @@ namespace GenTaskScheduler.SqlServer.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<TimeOnly>("TimeOfDay")
+                        .HasColumnType("time");
+
+                    b.ToTable("Triggers", t =>
+                        {
+                            t.Property("TimeOfDay")
+                                .HasColumnName("MonthlyTrigger_TimeOfDay");
+                        });
+
                     b.HasDiscriminator().HasValue("Monthly");
                 });
 
             modelBuilder.Entity("GenTaskScheduler.Core.Models.Triggers.OnceTrigger", b =>
                 {
                     b.HasBaseType("GenTaskScheduler.Core.Models.Triggers.BaseTrigger");
+
+                    b.Property<bool>("Executed")
+                        .HasColumnType("bit");
 
                     b.HasDiscriminator().HasValue("Once");
                 });
@@ -282,6 +272,15 @@ namespace GenTaskScheduler.SqlServer.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<TimeOnly>("TimeOfDay")
+                        .HasColumnType("time");
+
+                    b.ToTable("Triggers", t =>
+                        {
+                            t.Property("TimeOfDay")
+                                .HasColumnName("WeeklyTrigger_TimeOfDay");
+                        });
 
                     b.HasDiscriminator().HasValue("Weekly");
                 });
@@ -304,14 +303,7 @@ namespace GenTaskScheduler.SqlServer.Migrations
                         .HasForeignKey("DependsOnTaskId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("GenTaskScheduler.Core.Models.Common.TaskExecutionHistory", "LastExecutionHistory")
-                        .WithMany()
-                        .HasForeignKey("LastExecutionHistoryId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("DependsOnTask");
-
-                    b.Navigation("LastExecutionHistory");
                 });
 
             modelBuilder.Entity("GenTaskScheduler.Core.Models.Common.TaskExecutionHistory", b =>
