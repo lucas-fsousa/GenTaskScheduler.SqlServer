@@ -17,6 +17,7 @@ public class GenSqlServerContext: GenTaskSchedulerDbContext {
       sqlOptions.CommandTimeout(30);
       sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
       sqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
+      sqlOptions.MigrationsHistoryTable("__GenSchedulerMigrationHistory__");
     });
 
     base.OnConfiguring(options);
@@ -31,6 +32,5 @@ public class GenSqlServerContext: GenTaskSchedulerDbContext {
     modelBuilder.Entity<ScheduledTask>().HasIndex(t => t.IsActive);
     modelBuilder.Entity<BaseTrigger>().HasIndex(t => t.NextExecution);
     modelBuilder.Entity<BaseTrigger>().HasIndex(t => new { t.NextExecution, t.LastTriggeredStatus });
-
   }
 }
