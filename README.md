@@ -103,8 +103,9 @@ await repo.AddAsync(task);
 If you do **not** want to apply EF Core migrations automatically at runtime (via `applyMigrations: true`), you can use the built-in **SchemeExporter** to export the database creation script manually:
 
 ```csharp
-var exporter = new SchemeExporter(new SqlServerSchemeProvider(context));
-exporter.ExportToFile("schema.sql");
+var schemeProvider = provider.GetRequiredService<ISchemeProvider>();
+var scripts = schemeProvider.GenerateSchemeScript();
+File.AppendAllText("/your/path/for/file.sql", scripts);
 ```
 
 This is useful for teams that prefer to manage database schemas explicitly via migration pipelines or DevOps.
@@ -119,7 +120,7 @@ We welcome contributions! Feel free to open issues, suggest features, or submit 
 
 ## 🛠️ Technologies Used
 
-- .NET 6+
+- .NET 8+
 - SQL Server
 - Entity Framework Core
 - Hosted Services
